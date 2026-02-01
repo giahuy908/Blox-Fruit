@@ -1,0 +1,201 @@
+--// Modern UI Library Remake
+--// By ChatGPT - Full Version
+
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local Library = {}
+Library.Theme = {
+	Background = Color3.fromRGB(18,18,22),
+	Topbar = Color3.fromRGB(22,22,28),
+	Stroke = Color3.fromRGB(60,60,80),
+	Accent = Color3.fromRGB(0,170,255), -- 🔥 đổi màu ở đây
+	Text = Color3.fromRGB(235,235,235),
+	SubText = Color3.fromRGB(170,170,170)
+}
+
+--// Tween Helper
+local function Tween(obj,time,props)
+	TweenService:Create(obj,TweenInfo.new(time,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),props):Play()
+end
+
+--// Create Window
+function Library:CreateWindow(title)
+	local ScreenGui = Instance.new("ScreenGui",game.CoreGui)
+	ScreenGui.Name = "ModernUILib"
+
+	local Main = Instance.new("Frame",ScreenGui)
+	Main.Size = UDim2.fromOffset(560,380)
+	Main.Position = UDim2.fromScale(0.5,0.5)
+	Main.AnchorPoint = Vector2.new(0.5,0.5)
+	Main.BackgroundColor3 = self.Theme.Background
+	Main.ClipsDescendants = true
+	Instance.new("UICorner",Main).CornerRadius = UDim.new(0,14)
+
+	local Stroke = Instance.new("UIStroke",Main)
+	Stroke.Color = self.Theme.Stroke
+	Stroke.Thickness = 1
+
+	-- Topbar
+	local Top = Instance.new("Frame",Main)
+	Top.Size = UDim2.new(1,0,0,46)
+	Top.BackgroundColor3 = self.Theme.Topbar
+	Instance.new("UICorner",Top).CornerRadius = UDim.new(0,14)
+
+	local Title = Instance.new("TextLabel",Top)
+	Title.Text = title or "Modern UI"
+	Title.Size = UDim2.new(1,-20,1,0)
+	Title.Position = UDim2.fromOffset(10,0)
+	Title.BackgroundTransparency = 1
+	Title.TextXAlignment = Left
+	Title.TextColor3 = self.Theme.Text
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 16
+
+	-- Drag
+	do
+		local dragging,dragStart,startPos
+		Top.InputBegan:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragging = true
+				dragStart = i.Position
+				startPos = Main.Position
+			end
+		end)
+		UIS.InputChanged:Connect(function(i)
+			if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+				local delta = i.Position - dragStart
+				Main.Position = startPos + UDim2.fromOffset(delta.X,delta.Y)
+			end
+		end)
+		UIS.InputEnded:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragging = false
+			end
+		end)
+	end
+
+	-- Tabs
+	local TabBar = Instance.new("Frame",Main)
+	TabBar.Position = UDim2.fromOffset(0,50)
+	TabBar.Size = UDim2.fromOffset(150,330)
+	TabBar.BackgroundTransparency = 1
+
+	local TabList = Instance.new("UIListLayout",TabBar)
+	TabList.Padding = UDim.new(0,6)
+
+	local Pages = Instance.new("Frame",Main)
+	Pages.Position = UDim2.fromOffset(160,56)
+	Pages.Size = UDim2.fromOffset(390,310)
+	Pages.BackgroundTransparency = 1
+
+	local UIPage = Instance.new("UIPageLayout",Pages)
+	UIPage.EasingStyle = Enum.EasingStyle.Quad
+	UIPage.TweenTime = 0.3
+
+	local Window = {}
+
+	function Window:CreateTab(name)
+		local TabBtn = Instance.new("TextButton",TabBar)
+		TabBtn.Size = UDim2.fromOffset(140,40)
+		TabBtn.Text = name
+		TabBtn.BackgroundColor3 = Library.Theme.Topbar
+		TabBtn.TextColor3 = Library.Theme.SubText
+		TabBtn.Font = Enum.Font.Gotham
+		TabBtn.TextSize = 14
+		Instance.new("UICorner",TabBtn).CornerRadius = UDim.new(0,10)
+
+		local Page = Instance.new("ScrollingFrame",Pages)
+		Page.Size = UDim2.fromScale(1,1)
+		Page.CanvasSize = UDim2.new(0,0,0,0)
+		Page.ScrollBarImageTransparency = 1
+		Page.BackgroundTransparency = 1
+
+		local Layout = Instance.new("UIListLayout",Page)
+		Layout.Padding = UDim.new(0,10)
+
+		TabBtn.MouseButton1Click:Connect(function()
+			UIPage:JumpTo(Page)
+			for _,b in ipairs(TabBar:GetChildren()) do
+				if b:IsA("TextButton") then
+					Tween(b,0.2,{BackgroundColor3 = Library.Theme.Topbar,TextColor3 = Library.Theme.SubText})
+				end
+			end
+			Tween(TabBtn,0.2,{BackgroundColor3 = Library.Theme.Accent,TextColor3 = Color3.new(1,1,1)})
+		end)
+
+		local Tab = {}
+
+		-- Button
+		function Tab:AddButton(text,callback)
+			local Btn = Instance.new("TextButton",Page)
+			Btn.Size = UDim2.new(1,-10,0,40)
+			Btn.Text = text
+			Btn.BackgroundColor3 = Library.Theme.Topbar
+			Btn.TextColor3 = Library.Theme.Text
+			Btn.Font = Enum.Font.Gotham
+			Btn.TextSize = 14
+			Instance.new("UICorner",Btn).CornerRadius = UDim.new(0,10)
+
+			Btn.MouseButton1Click:Connect(function()
+				Tween(Btn,0.1,{BackgroundColor3 = Library.Theme.Accent})
+				task.wait(0.1)
+				Tween(Btn,0.2,{BackgroundColor3 = Library.Theme.Topbar})
+				pcall(callback)
+			end)
+		end
+
+		-- Toggle
+		function Tab:AddToggle(text,default,callback)
+			local Holder = Instance.new("Frame",Page)
+			Holder.Size = UDim2.new(1,-10,0,40)
+			Holder.BackgroundColor3 = Library.Theme.Topbar
+			Instance.new("UICorner",Holder).CornerRadius = UDim.new(0,10)
+
+			local Label = Instance.new("TextLabel",Holder)
+			Label.Text = text
+			Label.BackgroundTransparency = 1
+			Label.Size = UDim2.new(1,-60,1,0)
+			Label.TextXAlignment = Left
+			Label.Position = UDim2.fromOffset(10,0)
+			Label.Font = Enum.Font.Gotham
+			Label.TextSize = 14
+			Label.TextColor3 = Library.Theme.Text
+
+			local Switch = Instance.new("Frame",Holder)
+			Switch.Size = UDim2.fromOffset(42,22)
+			Switch.Position = UDim2.new(1,-52,0.5,-11)
+			Switch.BackgroundColor3 = Color3.fromRGB(50,50,60)
+			Instance.new("UICorner",Switch).CornerRadius = UDim.new(1,0)
+
+			local Knob = Instance.new("Frame",Switch)
+			Knob.Size = UDim2.fromOffset(18,18)
+			Knob.Position = UDim2.fromOffset(2,2)
+			Knob.BackgroundColor3 = Color3.new(1,1,1)
+			Instance.new("UICorner",Knob).CornerRadius = UDim.new(1,0)
+
+			local State = default or false
+			local function Set(v)
+				State = v
+				Tween(Knob,0.2,{Position = v and UDim2.fromOffset(22,2) or UDim2.fromOffset(2,2)})
+				Tween(Switch,0.2,{BackgroundColor3 = v and Library.Theme.Accent or Color3.fromRGB(50,50,60)})
+				pcall(callback,v)
+			end
+			Set(State)
+
+			Holder.InputBegan:Connect(function(i)
+				if i.UserInputType == Enum.UserInputType.MouseButton1 then
+					Set(not State)
+				end
+			end)
+		end
+
+		return Tab
+	end
+
+	return Window
+end
+
+return Library
