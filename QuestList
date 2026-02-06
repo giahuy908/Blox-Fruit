@@ -1,0 +1,110 @@
+local QuestList = {
+
+-- ===== FIRST SEA =====
+
+[1] = {Min = 1, Max = 9, Quest = "BanditQuest1", Mob = "Bandit", LevelQuest = 1, NPC = "Bandit Quest Giver"},
+[2] = {Min = 10, Max = 14, Quest = "BanditQuest2", Mob = "Monkey", LevelQuest = 2},
+
+[3] = {Min = 15, Max = 29, Quest = "JungleQuest", Mob = "Gorilla", LevelQuest = 1},
+[4] = {Min = 30, Max = 39, Quest = "JungleQuest", Mob = "Gorilla King", LevelQuest = 2},
+
+[5] = {Min = 40, Max = 59, Quest = "BuggyQuest1", Mob = "Pirate", LevelQuest = 1},
+[6] = {Min = 60, Max = 74, Quest = "BuggyQuest1", Mob = "Brute", LevelQuest = 2},
+
+[7] = {Min = 75, Max = 89, Quest = "DesertQuest", Mob = "Desert Bandit", LevelQuest = 1},
+[8] = {Min = 90, Max = 99, Quest = "DesertQuest", Mob = "Desert Officer", LevelQuest = 2},
+
+[9] = {Min = 100, Max = 119, Quest = "SnowQuest", Mob = "Snow Bandit", LevelQuest = 1},
+[10] = {Min = 120, Max = 149, Quest = "SnowQuest", Mob = "Snowman", LevelQuest = 2},
+
+[11] = {Min = 150, Max = 174, Quest = "MarinefordQuest", Mob = "Chief Petty Officer", LevelQuest = 1},
+[12] = {Min = 175, Max = 189, Quest = "MarinefordQuest", Mob = "Vice Admiral", LevelQuest = 2},
+
+[13] = {Min = 190, Max = 209, Quest = "SkyQuest", Mob = "Sky Bandit", LevelQuest = 1},
+[14] = {Min = 210, Max = 249, Quest = "SkyQuest", Mob = "Dark Master", LevelQuest = 2},
+
+[15] = {Min = 250, Max = 274, Quest = "ColosseumQuest", Mob = "Toga Warrior", LevelQuest = 1},
+[16] = {Min = 275, Max = 299, Quest = "ColosseumQuest", Mob = "Gladiator", LevelQuest = 2},
+
+[17] = {Min = 300, Max = 329, Quest = "MagmaQuest", Mob = "Military Soldier", LevelQuest = 1},
+[18] = {Min = 330, Max = 374, Quest = "MagmaQuest", Mob = "Military Spy", LevelQuest = 2},
+
+[19] = {Min = 375, Max = 399, Quest = "FishmanQuest", Mob = "Fishman Warrior", LevelQuest = 1},
+[20] = {Min = 400, Max = 449, Quest = "FishmanQuest", Mob = "Fishman Commando", LevelQuest = 2},
+
+[21] = {Min = 450, Max = 474, Quest = "SkyExp1Quest", Mob = "God's Guard", LevelQuest = 1},
+[22] = {Min = 475, Max = 524, Quest = "SkyExp1Quest", Mob = "Shanda", LevelQuest = 2},
+
+[23] = {Min = 525, Max = 549, Quest = "SkyExp2Quest", Mob = "Royal Squad", LevelQuest = 1},
+[24] = {Min = 550, Max = 624, Quest = "SkyExp2Quest", Mob = "Royal Soldier", LevelQuest = 2},
+
+[25] = {Min = 625, Max = 649, Quest = "FountainQuest", Mob = "Galley Pirate", LevelQuest = 1},
+[26] = {Min = 650, Max = 700, Quest = "FountainQuest", Mob = "Galley Captain", LevelQuest = 2},
+
+-- ===== SECOND SEA =====
+
+[27] = {Min = 700, Max = 724, Quest = "Area1Quest", Mob = "Raider", LevelQuest = 1},
+[28] = {Min = 725, Max = 774, Quest = "Area1Quest", Mob = "Mercenary", LevelQuest = 2},
+
+[29] = {Min = 775, Max = 799, Quest = "Area2Quest", Mob = "Swan Pirate", LevelQuest = 1},
+[30] = {Min = 800, Max = 874, Quest = "Area2Quest", Mob = "Factory Staff", LevelQuest = 2},
+
+[31] = {Min = 875, Max = 899, Quest = "ZombieQuest", Mob = "Zombie", LevelQuest = 1},
+[32] = {Min = 900, Max = 949, Quest = "ZombieQuest", Mob = "Vampire", LevelQuest = 2},
+
+[33] = {Min = 950, Max = 974, Quest = "SnowMountainQuest", Mob = "Snow Trooper", LevelQuest = 1},
+[34] = {Min = 975, Max = 999, Quest = "SnowMountainQuest", Mob = "Winter Warrior", LevelQuest = 2},
+
+[35] = {Min = 1000, Max = 1049, Quest = "HotIslandQuest", Mob = "Lab Subordinate", LevelQuest = 1},
+[36] = {Min = 1050, Max = 1099, Quest = "HotIslandQuest", Mob = "Horned Warrior", LevelQuest = 2},
+
+[37] = {Min = 1100, Max = 1124, Quest = "ColdIslandQuest", Mob = "Magma Ninja", LevelQuest = 1},
+[38] = {Min = 1125, Max = 1174, Quest = "ColdIslandQuest", Mob = "Lava Pirate", LevelQuest = 2},
+
+[39] = {Min = 1175, Max = 1199, Quest = "IceCastleQuest", Mob = "Snow Lurker", LevelQuest = 1},
+[40] = {Min = 1200, Max = 1249, Quest = "IceCastleQuest", Mob = "Arctic Warrior", LevelQuest = 2},
+
+[41] = {Min = 1250, Max = 1274, Quest = "ForgottenQuest", Mob = "Sea Soldier", LevelQuest = 1},
+[42] = {Min = 1275, Max = 1500, Quest = "ForgottenQuest", Mob = "Water Fighter", LevelQuest = 2},
+
+-- ===== THIRD SEA =====
+
+[43] = {Min = 1500, Max = 1524, Quest = "PiratePortQuest", Mob = "Pirate Millionaire", LevelQuest = 1},
+[44] = {Min = 1525, Max = 1574, Quest = "PiratePortQuest", Mob = "Pistol Billionaire", LevelQuest = 2},
+
+[45] = {Min = 1575, Max = 1599, Quest = "AmazonQuest", Mob = "Dragon Crew Warrior", LevelQuest = 1},
+[46] = {Min = 1600, Max = 1624, Quest = "AmazonQuest", Mob = "Dragon Crew Archer", LevelQuest = 2},
+
+[47] = {Min = 1625, Max = 1649, Quest = "AmazonQuest2", Mob = "Female Islander", LevelQuest = 1},
+[48] = {Min = 1650, Max = 1699, Quest = "AmazonQuest2", Mob = "Giant Islander", LevelQuest = 2},
+
+[49] = {Min = 1700, Max = 1724, Quest = "MarineTreeQuest", Mob = "Marine Recruit", LevelQuest = 1},
+[50] = {Min = 1725, Max = 1774, Quest = "MarineTreeQuest", Mob = "Marine Captain", LevelQuest = 2},
+
+[51] = {Min = 1775, Max = 1799, Quest = "DeepForestQuest", Mob = "Forest Pirate", LevelQuest = 1},
+[52] = {Min = 1800, Max = 1824, Quest = "DeepForestQuest", Mob = "Mythological Pirate", LevelQuest = 2},
+
+[53] = {Min = 1825, Max = 1849, Quest = "DeepForestQuest2", Mob = "Jungle Pirate", LevelQuest = 1},
+[54] = {Min = 1850, Max = 1899, Quest = "DeepForestQuest2", Mob = "Musketeer Pirate", LevelQuest = 2},
+
+[55] = {Min = 1900, Max = 1924, Quest = "HauntedQuest", Mob = "Reborn Skeleton", LevelQuest = 1},
+[56] = {Min = 1925, Max = 1974, Quest = "HauntedQuest", Mob = "Living Zombie", LevelQuest = 2},
+
+[57] = {Min = 1975, Max = 1999, Quest = "IceCreamQuest", Mob = "Ice Cream Chef", LevelQuest = 1},
+[58] = {Min = 2000, Max = 2049, Quest = "IceCreamQuest", Mob = "Ice Cream Commander", LevelQuest = 2},
+
+[59] = {Min = 2050, Max = 2074, Quest = "CakeQuest1", Mob = "Cookie Crafter", LevelQuest = 1},
+[60] = {Min = 2075, Max = 2124, Quest = "CakeQuest1", Mob = "Cake Guard", LevelQuest = 2},
+
+[61] = {Min = 2125, Max = 2149, Quest = "CakeQuest2", Mob = "Baking Staff", LevelQuest = 1},
+[62] = {Min = 2150, Max = 2199, Quest = "CakeQuest2", Mob = "Head Baker", LevelQuest = 2},
+
+[63] = {Min = 2200, Max = 2224, Quest = "ChocolateQuest", Mob = "Cocoa Warrior", LevelQuest = 1},
+[64] = {Min = 2225, Max = 2274, Quest = "ChocolateQuest", Mob = "Chocolate Bar Battler", LevelQuest = 2},
+
+[65] = {Min = 2275, Max = 2299, Quest = "CandyQuest", Mob = "Sweet Thief", LevelQuest = 1},
+[66] = {Min = 2300, Max = 2349, Quest = "CandyQuest", Mob = "Candy Rebel", LevelQuest = 2},
+
+[67] = {Min = 2350, Max = 2399, Quest = "TikiQuest", Mob = "Isle Outlaw", LevelQuest = 1},
+[68] = {Min = 2400, Max = 2800, Quest = "TikiQuest", Mob = "Sun-kissed Warrior", LevelQuest = 2},
+}
