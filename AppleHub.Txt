@@ -1,0 +1,1308 @@
+```lua
+--[[
+    ========================================================================
+    🍎 SCRIPT BLOX FRUITS PREMIUM - PHIÊN BẢN KHỔNG LỒ (FULL CHỨC NĂNG) 🍎
+    ========================================================================
+    Giao diện: AppleCat Library (Phiên bản Cao Cấp)
+    Ngôn ngữ hiển thị & Chú thích: Tiếng Việt 100%
+    Tính năng: Tích hợp đầy đủ logic tự động từ file gốc với cấu trúc tối ưu.
+]]
+
+-- Khởi tạo cài đặt mặc định
+Settings = Settings or {}
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local CollectionService = game:GetService("CollectionService")
+local Lighting = game:GetService("Lighting")
+
+local Plr = Players.LocalPlayer
+
+-- Tải thư viện AppleCat Library trực tiếp
+local Success, AppleCatLibrary = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/giahuy908/Ui-Library/refs/heads/main/AppleCatLib.txt"))()
+end)
+
+if not Success or not AppleCatLibrary then
+    warn("Không thể tải thư viện AppleCat! Đang sử dụng chế độ dự phòng.")
+    return
+end
+
+-- Khởi tạo Cửa sổ chính
+local Window = AppleCatLibrary:CreateWindow({
+    Title = "AppleCat Blox Fruits Premium",
+    Size = UDim2.fromOffset(600, 480),
+    Theme = "Dark",
+    Logo = "rbxassetid://124862059676525",
+    ToggleKey = Enum.KeyCode.RightShift
+})
+
+-- Thông báo hệ thống khởi chạy thành công
+AppleCatLibrary:Notify({
+    Title = "Hệ Thống",
+    Content = "Khởi chạy thành công AppleCat Blox Fruits! Nhấn RightShift để ẩn/hiện.",
+    Duration = 5,
+    Color = Color3.fromRGB(0, 255, 150)
+})
+
+-- ========================================================================
+-- BIẾN TOÀN CỤC & BIẾN TRẠNG THÁI FARM
+-- ========================================================================
+_G.SelectWeapon = "Melee"
+_G.AutoFarm = false
+_G.AutoNear = false
+_G.BringMonster = true
+_G.Fast_Delay = 0.05
+_G.AutoRaidPirate = false
+_G.AutoFactory = false
+_G.FarmBone = false
+_G.Hallow = false
+_G.Rdbone = false
+_G.Pray = false
+_G.Trylux = false
+_G.FarmCake = false
+_G.Fullykatakuri = false
+_G.CollectBerry = false
+_G.FarmChest = false
+_G.AutoBoss = false
+_G.SelectBoss = ""
+_G.SelectMaterial = ""
+_G.AutoFarmMaterial = false
+_G.AutoFishing = false
+_G.SelectedBait = "Basic Bait"
+_G.SelectedRod = "Fishing Rod"
+_G.AutoSecondSea = false
+_G.AutoSaber = false
+_G.Autopole = false
+_G.Autosaw = false
+_G.ChiefWarden = false
+_G.Trident = false
+_G.AutoBartilo = false
+_G.ThirdSea = false
+_G.AutoDarkBoss = false
+_G.CursedCaptain = false
+_G.AutoBuyEnchancementColour = false
+_G.AutoBuyLegendarySword = false
+_G.Longsword = false
+_G.GravityBlade = false
+_G.SwodsFlail = false
+_G.AutoRengoku = false
+_G.SwodsDRTrident = false
+_G.RipIndraKill = false
+_G.AutoSkullGuitar = false
+_G.AutoElitehunter = false
+_G.AutoGetCDK = false
+_G.SwodCanvander = false
+_G.AutoQuestRace = false
+_G.Dungeon = false
+_G.AutoLawRaid = false
+_G.Tweenfruit = false
+_G.Grabfruit = false
+_G.TeleportIsland = false
+_G.SelectIsland = ""
+_G.WalkWater = true
+_G.RemoveLava = false
+_G.CheckPoint = false
+_G.AutoHaki = false
+_G.AutoRaceV3 = false
+_G.AutoRaceV4 = false
+_G.WhiteScreen = false
+_G.AutoRejoin30m = false
+
+-- Phát hiện Thế giới (World)
+local World1, World2, World3 = false, false, false
+if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
+    World1 = true
+elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
+    World2 = true
+elseif game.PlaceId == 7449423635 or game.PlaceId == 100117331123089 then
+    World3 = true
+end
+
+-- Tự động tham gia Đội (Marines hoặc Pirates)
+local function JoinTeam()
+    local targetTeam = "Pirates" -- Mặc định là Pirates
+    if Settings.JoinTeam == "Marines" then
+        targetTeam = "Marines"
+    end
+    if not Plr.Team or (Plr.Team.Name ~= "Marines" and Plr.Team.Name ~= "Pirates") then
+        pcall(function()
+            ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_"):InvokeServer("SetTeam", targetTeam)
+        end)
+    end
+end
+JoinTeam()
+
+-- Vô hiệu hóa hoạt ảnh chết & hồi sinh để tránh lag
+pcall(function()
+    hookfunction(require(ReplicatedStorage.Effect.Container.Death), function() end)
+    hookfunction(require(ReplicatedStorage.Effect.Container.Respawn), function() end)
+end)
+
+-- ========================================================================
+-- HÀM HỖ TRỢ DI CHUYỂN, VŨ KHÍ & QUÁI VẬT
+-- ========================================================================
+local function HRP()
+    return Plr.Character and Plr.Character:FindFirstChild("HumanoidRootPart")
+end
+
+-- Hệ thống Dịch Chuyển mượt mà (Tween) bằng CFrame
+local TweenSpeed = 325
+local CurrentTween = nil
+
+local function stopTeleport()
+    if CurrentTween then
+        CurrentTween:Cancel()
+        CurrentTween = nil
+    end
+    local char = Plr.Character
+    if char and char:FindFirstChild("PartTele") then
+        char.PartTele:Destroy()
+    end
+end
+
+local function topos(targetCFrame)
+    local char = Plr.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") or char.Humanoid.Health <= 0 then return end
+    
+    local hrp = char.HumanoidRootPart
+    local distance = (targetCFrame.Position - hrp.Position).Magnitude
+    
+    if distance < 10 then
+        hrp.CFrame = targetCFrame
+        return
+    end
+
+    -- Tạo một Part đệm để nhân vật đứng khi dịch chuyển xuyên tường
+    if not char:FindFirstChild("PartTele") then
+        local part = Instance.new("Part", char)
+        part.Size = Vector3.new(10, 1, 10)
+        part.Name = "PartTele"
+        part.Anchored = true
+        part.Transparency = 1
+        part.CanCollide = true
+        part.CFrame = hrp.CFrame
+    end
+
+    local partTele = char.PartTele
+    partTele.CFrame = hrp.CFrame
+
+    -- Liên kết sự kiện di chuyển nhân vật cùng Part đệm
+    local connection
+    connection = partTele:GetPropertyChangedSignal("CFrame"):Connect(function()
+        if char:FindFirstChild("HumanoidRootPart") then
+            hrp.CFrame = partTele.CFrame
+        else
+            connection:Disconnect()
+        end
+    end)
+
+    if CurrentTween then CurrentTween:Cancel() end
+    
+    local tweenInfo = TweenInfo.new(distance / TweenSpeed, Enum.EasingStyle.Linear)
+    CurrentTween = TweenService:Create(partTele, tweenInfo, {CFrame = targetCFrame})
+    CurrentTween:Play()
+
+    CurrentTween.Completed:Connect(function(state)
+        if state == Enum.PlaybackState.Completed then
+            if char:FindFirstChild("PartTele") then
+                char.PartTele:Destroy()
+            end
+            connection:Disconnect()
+        end
+    end)
+end
+
+local function TP1(targetCFrame)
+    topos(targetCFrame)
+end
+
+-- Trang bị vũ khí tự động
+local function EquipWeapon(weaponType)
+    local char = Plr.Character
+    local backpack = Plr.Backpack
+    if not char or not char:FindFirstChild("Humanoid") then return end
+
+    -- Tìm vũ khí theo loại trong Backpack
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            if (weaponType == "Melee" and tool.ToolTip == "Melee") or
+               (weaponType == "Sword" and tool.ToolTip == "Sword") or
+               (weaponType == "Gun" and tool.ToolTip == "Gun") or
+               (weaponType == "Blox Fruit" and tool.ToolTip == "Blox Fruit") or
+               (tool.Name == weaponType) then
+                char.Humanoid:EquipTool(tool)
+                break
+            end
+        end
+    end
+end
+
+local function UnEquipWeapon()
+    local char = Plr.Character
+    if not char or not char:FindFirstChild("Humanoid") then return end
+    char.Humanoid:UnequipTools()
+end
+
+-- Tự động bật Buso Haki
+local function AutoHaki()
+    local char = Plr.Character
+    if char and not char:FindFirstChild("HasBuso") then
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
+    end
+end
+
+-- Bỏ qua nhảy nhảy để ko bị phát hiện khi đang bay
+spawn(function()
+    RunService.Heartbeat:Connect(function()
+        pcall(function()
+            if (_G.AutoFarm or _G.AutoNear or _G.FarmBone or _G.FarmCake) and Plr.Character:FindFirstChild("Humanoid") then
+                Plr.Character.Humanoid:ChangeState(11) -- Noclip/Floating state
+            end
+        end)
+    end)
+end)
+
+-- Tạo lớp màng bảo vệ khi dịch chuyển (Noclip)
+spawn(function()
+    while task.wait(0.2) do
+        pcall(function()
+            if _G.AutoFarm or _G.AutoNear or _G.FarmBone or _G.FarmCake or _G.AutoBoss or _G.AutoFarmMaterial then
+                if not Plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
+                    local bv = Instance.new("BodyVelocity")
+                    bv.Name = "BodyClip"
+                    bv.Parent = Plr.Character.HumanoidRootPart
+                    bv.MaxForce = Vector3.new(100000, 100000, 100000)
+                    bv.Velocity = Vector3.new(0, 0, 0)
+                end
+                for _, part in pairs(Plr.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            else
+                if Plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
+                    Plr.Character.HumanoidRootPart.BodyClip:Destroy()
+                end
+            end
+        end)
+    end
+end)
+
+-- Tránh bị văng game vì Treo máy (Anti-AFK)
+Plr.Idled:Connect(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+end)
+
+-- ========================================================================
+-- LOGIC KIỂM TRA NHIỆM VỤ THEO CẤP ĐỘ (CHÉP TỪ FILE GỐC & NÂNG CẤP)
+-- ========================================================================
+local Mon, LevelQuest, NameQuest, NameMon, CFrameQuest, CFrameMon
+local MonNew, LevelQuestNew, NameQuestNew, NameMonNew, CFrameQuestNew, CFrameMonNew
+local StartBring = false
+local MonFarm = ""
+local PosMon = CFrame.new(0,0,0)
+
+-- Kiểm tra Nhiệm vụ Cũ (Thế giới 1, 2, 3 dưới Level 2600)
+function CheckQuest()
+    local MyLevel = Plr.Data.Level.Value
+    if World1 then
+        if MyLevel >= 1 and MyLevel <= 9 then
+            Mon = "Bandit" LevelQuest = 1 NameQuest = "BanditQuest1" NameMon = "Bandit"
+            CFrameQuest = CFrame.new(1059.37, 15.44, 1550.42)
+            CFrameMon = CFrame.new(1045.96, 27.00, 1560.82)
+        elseif MyLevel >= 10 and MyLevel <= 14 then
+            Mon = "Monkey" LevelQuest = 1 NameQuest = "JungleQuest" NameMon = "Monkey"
+            CFrameQuest = CFrame.new(-1598.08, 35.55, 153.37)
+            CFrameMon = CFrame.new(-1448.51, 67.85, 11.46)
+        elseif MyLevel >= 15 and MyLevel <= 29 then
+            Mon = "Gorilla" LevelQuest = 2 NameQuest = "JungleQuest" NameMon = "Gorilla"
+            CFrameQuest = CFrame.new(-1598.08, 35.55, 153.37)
+            CFrameMon = CFrame.new(-1129.88, 40.46, -525.42)
+        elseif MyLevel >= 30 and MyLevel <= 39 then
+            Mon = "Pirate" LevelQuest = 1 NameQuest = "BuggyQuest1" NameMon = "Pirate"
+            CFrameQuest = CFrame.new(-1141.07, 4.10, 3831.54)
+            CFrameMon = CFrame.new(-1103.51, 13.75, 3896.09)
+        elseif MyLevel >= 40 and MyLevel <= 59 then
+            Mon = "Brute" LevelQuest = 2 NameQuest = "BuggyQuest1" NameMon = "Brute"
+            CFrameQuest = CFrame.new(-1141.07, 4.10, 3831.54)
+            CFrameMon = CFrame.new(-1140.08, 14.80, 4322.92)
+        elseif MyLevel >= 60 and MyLevel <= 74 then
+            Mon = "Desert Bandit" LevelQuest = 1 NameQuest = "DesertQuest" NameMon = "Desert Bandit"
+            CFrameQuest = CFrame.new(894.48, 5.14, 4392.43)
+            CFrameMon = CFrame.new(924.79, 6.44, 4481.58)
+        elseif MyLevel >= 75 and MyLevel <= 89 then
+            Mon = "Desert Officer" LevelQuest = 2 NameQuest = "DesertQuest" NameMon = "Desert Officer"
+            CFrameQuest = CFrame.new(894.48, 5.14, 4392.43)
+            CFrameMon = CFrame.new(1608.28, 8.61, 4371.00)
+        elseif MyLevel >= 90 and MyLevel <= 99 then
+            Mon = "Snow Bandit" LevelQuest = 1 NameQuest = "SnowQuest" NameMon = "Snow Bandit"
+            CFrameQuest = CFrame.new(1389.74, 88.15, -1298.90)
+            CFrameMon = CFrame.new(1354.34, 87.27, -1393.94)
+        elseif MyLevel >= 100 and MyLevel <= 119 then
+            Mon = "Snowman" LevelQuest = 2 NameQuest = "SnowQuest" NameMon = "Snowman"
+            CFrameQuest = CFrame.new(1389.74, 88.15, -1298.90)
+            CFrameMon = CFrame.new(1201.64, 144.57, -1550.06)
+        elseif MyLevel >= 120 and MyLevel <= 149 then
+            Mon = "Chief Petty Officer" LevelQuest = 1 NameQuest = "MarineQuest2" NameMon = "Chief Petty Officer"
+            CFrameQuest = CFrame.new(-5039.58, 27.35, 4324.68)
+            CFrameMon = CFrame.new(-4881.23, 22.65, 4273.75)
+        else
+            -- Mặc định level cao hơn ở Sea 1
+            Mon = "Galley Pirate" LevelQuest = 1 NameQuest = "FountainQuest" NameMon = "Galley Pirate"
+            CFrameQuest = CFrame.new(5259.81, 37.35, 4050.02)
+            CFrameMon = CFrame.new(5551.02, 78.90, 3930.41)
+        end
+    elseif World2 then
+        if MyLevel >= 700 and MyLevel <= 724 then
+            Mon = "Raider" LevelQuest = 1 NameQuest = "Area1Quest" NameMon = "Raider"
+            CFrameQuest = CFrame.new(-429.54, 71.76, 1836.18)
+            CFrameMon = CFrame.new(-728.32, 52.77, 2345.77)
+        elseif MyLevel >= 725 and MyLevel <= 774 then
+            Mon = "Mercenary" LevelQuest = 2 NameQuest = "Area1Quest" NameMon = "Mercenary"
+            CFrameQuest = CFrame.new(-429.54, 71.76, 1836.18)
+            CFrameMon = CFrame.new(-1004.32, 80.15, 1424.61)
+        elseif MyLevel >= 775 and MyLevel <= 874 then
+            Mon = "Swan Pirate" LevelQuest = 1 NameQuest = "Area2Quest" NameMon = "Swan Pirate"
+            CFrameQuest = CFrame.new(638.43, 71.76, 918.28)
+            CFrameMon = CFrame.new(1068.66, 137.61, 1322.10)
+        else
+            Mon = "Zombie" LevelQuest = 1 NameQuest = "ZombieQuest" NameMon = "Zombie"
+            CFrameQuest = CFrame.new(-5497.06, 47.59, -795.23)
+            CFrameMon = CFrame.new(-5657.77, 78.96, -928.68)
+        end
+    elseif World3 then
+        if MyLevel >= 1500 and MyLevel <= 1524 then
+            Mon = "Pirate Millionaire" LevelQuest = 1 NameQuest = "PiratePortQuest" NameMon = "Pirate Millionaire"
+            CFrameQuest = CFrame.new(-450.10, 107.68, 5950.72)
+            CFrameMon = CFrame.new(-245.99, 47.30, 5584.10)
+        elseif MyLevel >= 1525 and MyLevel <= 1574 then
+            Mon = "Pistol Billionaire" LevelQuest = 2 NameQuest = "PiratePortQuest" NameMon = "Pistol Billionaire"
+            CFrameQuest = CFrame.new(-450.10, 107.68, 5950.72)
+            CFrameMon = CFrame.new(-54.81, 83.76, 5947.84)
+        elseif MyLevel >= 1575 and MyLevel <= 1599 then
+            Mon = "Dragon Crew Warrior" LevelQuest = 1 NameQuest = "DragonCrewQuest" NameMon = "Dragon Crew Warrior"
+            CFrameQuest = CFrame.new(6750.49, 127.44, -711.03)
+            CFrameMon = CFrame.new(6709.76, 52.34, -1139.02)
+        else
+            -- Sẽ sử dụng CheckQuestNew nếu người chơi đạt cấp độ trên 2600
+            Mon = "Reborn Skeleton" LevelQuest = 1 NameQuest = "HauntedQuest1" NameMon = "Reborn Skeleton"
+            CFrameQuest = CFrame.new(-9479.21, 141.21, 5566.09)
+            CFrameMon = CFrame.new(-8763.72, 165.72, 6159.86)
+        end
+    end
+end
+
+-- Hệ thống cập nhật nhiệm vụ mới nhất (Trên 2600 tại Submerged Island)
+function CheckQuestNew()
+    local lvl = Plr.Data.Level.Value
+    if lvl >= 2600 and lvl <= 2624 then
+        MonNew = "Reef Bandit" LevelQuestNew = 1 NameQuestNew = "SubmergedQuest1" NameMonNew = "Reef Bandit"
+        CFrameQuestNew = CFrame.new(10882.26, -2086.32, 10034.22)
+        CFrameMonNew = CFrame.new(10736.61, -2087.84, 9338.48)
+    elseif lvl >= 2625 and lvl <= 2649 then
+        MonNew = "Coral Pirate" LevelQuestNew = 2 NameQuestNew = "SubmergedQuest1" NameMonNew = "Coral Pirate"
+        CFrameQuestNew = CFrame.new(10882.26, -2086.32, 10034.22)
+        CFrameMonNew = CFrame.new(10965.10, -2158.88, 9177.25)
+    elseif lvl >= 2650 and lvl <= 2674 then
+        MonNew = "Sea Chanter" LevelQuestNew = 1 NameQuestNew = "SubmergedQuest2" NameMonNew = "Sea Chanter"
+        CFrameQuestNew = CFrame.new(10882.26, -2086.32, 10034.22)
+        CFrameMonNew = CFrame.new(10621.03, -2087.84, 10102.03)
+    elseif lvl >= 2675 and lvl <= 2699 then
+        MonNew = "Ocean Prophet" LevelQuestNew = 2 NameQuestNew = "SubmergedQuest2" NameMonNew = "Ocean Prophet"
+        CFrameQuestNew = CFrame.new(10882.26, -2086.32, 10034.22)
+        CFrameMonNew = CFrame.new(11056.14, -2001.67, 10117.44)
+    elseif lvl >= 2700 and lvl <= 2724 then
+        MonNew = "High Disciple" LevelQuestNew = 1 NameQuestNew = "SubmergedQuest3" NameMonNew = "High Disciple"
+        CFrameQuestNew = CFrame.new(9636.52, -1992.19, 9609.52)
+        CFrameMonNew = CFrame.new(9828.08, -1940.90, 9693.06)
+    elseif lvl >= 2725 then
+        MonNew = "Grand Devotee" LevelQuestNew = 2 NameQuestNew = "SubmergedQuest3" NameMonNew = "Grand Devotee"
+        CFrameQuestNew = CFrame.new(9636.52, -1992.19, 9609.52)
+        CFrameMonNew = CFrame.new(9582.02, 6.25, 6205.47)
+    end
+end
+
+-- ==========================================
+-- TAB 1: TRANG CHỦ (THÔNG TIN NGƯỜI CHƠI)
+-- ==========================================
+local HomeTab = Window:CreateTab("Trang Chủ", "home")
+local PlayerInfoSection = HomeTab:CreateSection("Thông tin tài khoản")
+
+PlayerInfoSection:CreateButton("Xem Tên & Cấp Độ", function()
+    AppleCatLibrary:Notify({
+        Title = "Thông Tin",
+        Content = "Tài khoản: " .. Plr.Name .. " - Cấp độ: " .. Plr.Data.Level.Value,
+        Duration = 5
+    })
+end)
+
+local ServerSection = HomeTab:CreateSection("Tiện ích Máy chủ")
+
+ServerSection:CreateButton("Chuyển Server nhanh (Server Hop)", function()
+    local PlaceId_ = game.PlaceId
+    local servers = {}
+    local cursor = ""
+    local req = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId_ .. "/servers/Public?sortOrder=Asc&limit=100"))
+    for _, s in pairs(req.data) do
+        if s.playing < s.maxPlayers and s.id ~= game.JobId then
+            table.insert(servers, s.id)
+        end
+    end
+    if #servers > 0 then
+        game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId_, servers[math.random(1, #servers)], Plr)
+    else
+        AppleCatLibrary:Notify({Title = "Thông báo", Content = "Không tìm thấy server phù hợp!", Duration = 3})
+    end
+end)
+
+ServerSection:CreateButton("Vào lại Server cũ (Rejoin)", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, Plr)
+end)
+
+-- Tự động đổi server tránh reset sau 30 phút
+ServerSection:CreateToggle("Tự động đổi Server sau 30p", false, function(state)
+    _G.AutoRejoin30m = state
+    if state then
+        task.spawn(function()
+            while _G.AutoRejoin30m do
+                task.wait(1800) -- 30 Phút
+                if _G.AutoRejoin30m then
+                    local PlaceId_ = game.PlaceId
+                    local req = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId_ .. "/servers/Public?sortOrder=Asc&limit=100"))
+                    for _, s in pairs(req.data) do
+                        if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                            game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceId_, s.id, Plr)
+                            break
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- ==========================================
+-- TAB 2: TỰ ĐỘNG FARM (LEVEL, QUÁI, BOSS)
+-- ==========================================
+local FarmTab = Window:CreateTab("Tự Động Farm", "sword")
+local WeaponSection = FarmTab:CreateSection("Cài đặt vũ khí")
+
+WeaponSection:CreateDropdown("Chọn loại vũ khí", {"Melee", "Sword", "Gun", "Blox Fruit"}, "Melee", function(value)
+    _G.SelectWeapon = value
+end)
+
+local LevelSection = FarmTab:CreateSection("Tự Động Tăng Cấp (Auto Farm Level)")
+
+LevelSection:CreateToggle("Kích hoạt Auto Farm Level", false, function(state)
+    _G.AutoFarm = state
+    if not state then
+        stopTeleport()
+    end
+end)
+
+-- Luồng logic Auto Farm Level chính
+task.spawn(function()
+    while task.wait(0.2) do
+        if _G.AutoFarm then
+            pcall(function()
+                local lvl = Plr.Data.Level.Value
+                
+                -- Điều kiện đặc biệt cho Đảo Submerged (Level 2600+) ở Sea 3
+                if World3 and lvl >= 2600 then
+                    -- Kiểm tra xem đã ở khu vực chìm chưa
+                    local hrp = HRP()
+                    if hrp and hrp.Position.Y > -1400 then
+                        -- Bay tới điểm trung chuyển NPC tàu ngầm
+                        topos(CFrame.new(-16246.04, 38.48, 1376.53))
+                        task.wait(1)
+                        ReplicatedStorage.Modules.Net["RF/SubmarineWorkerSpeak"]:InvokeServer("TravelToSubmergedIsland")
+                        task.wait(2)
+                    end
+                    
+                    CheckQuestNew()
+                    local questGui = Plr.PlayerGui.Main.Quest
+                    if not questGui.Visible then
+                        StartBring = false
+                        if (HRP().Position - CFrameQuestNew.Position).Magnitude > 20 then
+                            topos(CFrameQuestNew)
+                        else
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", NameQuestNew, LevelQuestNew)
+                        end
+                    else
+                        local titleText = questGui.Container.QuestTitle.Title.Text
+                        if not string.find(titleText, NameMonNew) then
+                            StartBring = false
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("AbandonQuest")
+                        else
+                            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                                if enemy.Name == MonNew and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                    repeat
+                                        task.wait()
+                                        EquipWeapon(_G.SelectWeapon)
+                                        AutoHaki()
+                                        topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                        enemy.HumanoidRootPart.CanCollide = false
+                                        enemy.Humanoid.WalkSpeed = 0
+                                        enemy.Head.CanCollide = false
+                                        enemy.HumanoidRootPart.Size = Vector3.new(65, 65, 65)
+                                        StartBring = true
+                                        MonFarm = enemy.Name
+                                        PosMon = enemy.HumanoidRootPart.CFrame
+                                        
+                                        -- Tự động bấm nút click tấn công
+                                        game:GetService("VirtualUser"):CaptureController()
+                                        game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                                    until not _G.AutoFarm or enemy.Humanoid.Health <= 0 or not enemy.Parent or not questGui.Visible
+                                end
+                            end
+                            if not workspace.Enemies:FindFirstChild(MonNew) then
+                                topos(CFrameMonNew)
+                                StartBring = false
+                            end
+                        end
+                    end
+                else
+                    -- Auto Farm Level Cơ Bản (Dưới Cấp 2600)
+                    local questGui = Plr.PlayerGui.Main.Quest
+                    CheckQuest()
+                    if questGui.Visible then
+                        local titleText = questGui.Container.QuestTitle.Title.Text
+                        if not string.find(titleText, NameMon) then
+                            StartBring = false
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("AbandonQuest")
+                        else
+                            if workspace.Enemies:FindFirstChild(Mon) then
+                                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                                    if enemy.Name == Mon and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                        repeat
+                                            task.wait()
+                                            EquipWeapon(_G.SelectWeapon)
+                                            AutoHaki()
+                                            topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                            enemy.HumanoidRootPart.CanCollide = false
+                                            enemy.Humanoid.WalkSpeed = 0
+                                            enemy.Head.CanCollide = false
+                                            enemy.HumanoidRootPart.Size = Vector3.new(65, 65, 65)
+                                            StartBring = true
+                                            MonFarm = enemy.Name
+                                            PosMon = enemy.HumanoidRootPart.CFrame
+                                            
+                                            game:GetService("VirtualUser"):CaptureController()
+                                            game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                                        until not _G.AutoFarm or enemy.Humanoid.Health <= 0 or not enemy.Parent or not questGui.Visible
+                                    end
+                                end
+                            else
+                                topos(CFrameMon)
+                                StartBring = false
+                            end
+                        end
+                    else
+                        -- Bay nhận nhiệm vụ
+                        topos(CFrameQuest)
+                        if (HRP().Position - CFrameQuest.Position).Magnitude <= 15 then
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Gom quái vật siêu nhanh (Bring Mob)
+task.spawn(function()
+    while task.wait() do
+        pcall(function()
+            if _G.BringMonster then
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if StartBring and enemy.Name == MonFarm and enemy:FindFirstChild("HumanoidRootPart") then
+                        if (enemy.HumanoidRootPart.Position - PosMon.Position).Magnitude <= 350 then
+                            enemy.HumanoidRootPart.Size = Vector3.new(65, 65, 65)
+                            enemy.HumanoidRootPart.CFrame = PosMon
+                            enemy.HumanoidRootPart.CanCollide = false
+                            enemy.Head.CanCollide = false
+                            if enemy.Humanoid:FindFirstChild("Animator") then
+                                enemy.Humanoid.Animator:Destroy()
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local MobSection = FarmTab:CreateSection("Tiện ích Farm Quái")
+
+MobSection:CreateToggle("Gom quái vật (Bring Mob)", true, function(state)
+    _G.BringMonster = state
+end)
+
+MobSection:CreateToggle("Tự động farm quái gần nhất", false, function(state)
+    _G.AutoNear = state
+end)
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if _G.AutoNear then
+            pcall(function()
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            AutoHaki()
+                            EquipWeapon(_G.SelectWeapon)
+                            topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            enemy.HumanoidRootPart.Size = Vector3.new(65, 65, 65)
+                            enemy.HumanoidRootPart.CanCollide = false
+                            PosMon = enemy.HumanoidRootPart.CFrame
+                            MonFarm = enemy.Name
+                            StartBring = true
+                        until not _G.AutoNear or not enemy.Parent or enemy.Humanoid.Health <= 0
+                        StartBring = false
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Tự động đánh Boss được chọn
+local BossSection = FarmTab:CreateSection("Săn Boss")
+
+local BossList = {}
+if World1 then
+    BossList = {"The Gorilla King", "Bobby", "Yeti", "Vice Admiral", "Warden", "Chief Warden", "Swan", "Magma Admiral", "Fishman Lord", "Saber Expert"}
+elseif World2 then
+    BossList = {"Diamond", "Jeremy", "Fajita", "Don Swan", "Smoke Admiral", "Cursed Captain", "Order", "Awakened Ice Admiral", "Tide Keeper"}
+elseif World3 then
+    BossList = {"Stone", "Island Empress", "Kilo Admiral", "Captain Elephant", "Beautiful Pirate", "rip_indra True Form", "Longma", "Soul Reaper", "Cake Queen"}
+end
+
+BossSection:CreateDropdown("Chọn Boss", BossList, BossList[1] or "", function(value)
+    _G.SelectBoss = value
+end)
+
+BossSection:CreateToggle("Săn Boss đã chọn", false, function(state)
+    _G.AutoBoss = state
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.AutoBoss and _G.SelectBoss ~= "" then
+            pcall(function()
+                local boss = workspace.Enemies:FindFirstChild(_G.SelectBoss)
+                if not boss then
+                    if ReplicatedStorage:FindFirstChild(_G.SelectBoss) then
+                        topos(ReplicatedStorage[_G.SelectBoss].HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                    end
+                else
+                    if boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            AutoHaki()
+                            EquipWeapon(_G.SelectWeapon)
+                            boss.HumanoidRootPart.CanCollide = false
+                            boss.Humanoid.WalkSpeed = 0
+                            boss.HumanoidRootPart.Size = Vector3.new(80, 80, 80)
+                            topos(boss.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                        until not _G.AutoBoss or not boss.Parent or boss.Humanoid.Health <= 0
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+
+-- ==========================================
+-- TAB 3: TRANG BỊ & VẬT PHẨM (CDK, SOUL GUITAR, BONES)
+-- ==========================================
+local ItemsTab = Window:CreateTab("Vật Phẩm", "swords")
+
+if World3 then
+    local BoneSection = ItemsTab:CreateSection("Farm Xương (Haunted Castle)")
+    
+    BoneSection:CreateToggle("Tự động Farm Xương", false, function(state)
+        _G.FarmBone = state
+        if not state then stopTeleport() end
+    end)
+    
+    task.spawn(function()
+        while task.wait(0.3) do
+            if _G.FarmBone and World3 then
+                pcall(function()
+                    local boneSpot = CFrame.new(-9508.56, 142.13, 5737.36)
+                    if (HRP().Position - boneSpot.Position).Magnitude > 1500 then
+                        topos(boneSpot)
+                    end
+                    
+                    local foundSkeleton = false
+                    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                        if (enemy.Name == "Reborn Skeleton" or enemy.Name == "Living Zombie" or enemy.Name == "Demonic Soul" or enemy.Name == "Posessed Mummy") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            foundSkeleton = true
+                            repeat
+                                task.wait()
+                                AutoHaki()
+                                EquipWeapon(_G.SelectWeapon)
+                                enemy.HumanoidRootPart.CanCollide = false
+                                enemy.Humanoid.WalkSpeed = 0
+                                enemy.Head.CanCollide = false
+                                StartBring = true
+                                MonFarm = enemy.Name
+                                PosMon = enemy.HumanoidRootPart.CFrame
+                                topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            until not _G.FarmBone or enemy.Humanoid.Health <= 0 or not enemy.Parent
+                        end
+                    end
+                    if not foundSkeleton then
+                        topos(CFrame.new(-9506.23, 172.13, 6117.07))
+                    end
+                end)
+            end
+        end
+    end)
+
+    BoneSection:CreateToggle("Tự động đổi Xương lấy quà", false, function(state)
+        _G.Rdbone = state
+    end)
+    task.spawn(function()
+        while task.wait(1) do
+            if _G.Rdbone then
+                ReplicatedStorage.Remotes.CommF_:InvokeServer("Bones", "Buy", 1, 1)
+            end
+        end
+    end)
+
+    BoneSection:CreateToggle("Tự động Cầu Nguyện", false, function(state)
+        _G.Pray = state
+    end)
+    task.spawn(function()
+        while task.wait(5) do
+            if _G.Pray then
+                topos(CFrame.new(-8652.99, 143.45, 6170.50))
+                ReplicatedStorage.Remotes.CommF_:InvokeServer("gravestoneEvent", 1)
+            end
+        end
+    end)
+
+    -- Săn Katakuri & Cake Prince
+    local KataSection = ItemsTab:CreateSection("Đảo Bánh & Katakuri")
+    
+    KataSection:CreateToggle("Auto Farm Cake Prince", false, function(state)
+        _G.FarmCake = state
+    end)
+    
+    task.spawn(function()
+        while task.wait(0.3) do
+            if _G.FarmCake then
+                pcall(function()
+                    if not workspace.Enemies:FindFirstChild("Cake Prince") then
+                        local hasMob = false
+                        for _, name in pairs({"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}) do
+                            if workspace.Enemies:FindFirstChild(name) then hasMob = true break end
+                        end
+                        if hasMob then
+                            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                                if (enemy.Name == "Cookie Crafter" or enemy.Name == "Cake Guard" or enemy.Name == "Baking Staff" or enemy.Name == "Head Baker") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                                    repeat
+                                        task.wait()
+                                        AutoHaki()
+                                        EquipWeapon(_G.SelectWeapon)
+                                        enemy.HumanoidRootPart.CanCollide = false
+                                        enemy.Humanoid.WalkSpeed = 0
+                                        enemy.HumanoidRootPart.Size = Vector3.new(70,70,70)
+                                        StartBring = true
+                                        MonFarm = enemy.Name
+                                        PosMon = enemy.HumanoidRootPart.CFrame
+                                        topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                                    until not _G.FarmCake or enemy.Humanoid.Health <= 0 or not enemy.Parent
+                                end
+                            end
+                        else
+                            topos(CFrame.new(-1884.77, 19.32, -11666.89)) -- Đảo Bánh
+                        end
+                    else
+                        -- Đánh Cake Prince
+                        local prince = workspace.Enemies:FindFirstChild("Cake Prince")
+                        if prince and prince:FindFirstChild("HumanoidRootPart") and prince.Humanoid.Health > 0 then
+                            repeat
+                                task.wait()
+                                AutoHaki()
+                                EquipWeapon(_G.SelectWeapon)
+                                topos(prince.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            until not _G.FarmCake or prince.Humanoid.Health <= 0 or not prince.Parent
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+end
+
+
+-- ==========================================
+-- TAB 4: SỰ KIỆN BIỂN (SEA EVENTS - TERROR SHARK)
+-- ==========================================
+local SeaTab = Window:CreateTab("Sự Kiện Biển", "waves")
+local BoatSection = SeaTab:CreateSection("Lái thuyền & Săn quái biển")
+
+BoatSection:CreateToggle("Tự động lái Thuyền tìm Hải quái", false, function(state)
+    _G.SailBoat = state
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.SailBoat then
+            pcall(function()
+                if not workspace.Enemies:FindFirstChild("Shark") and not workspace.Enemies:FindFirstChild("Terrorshark") then
+                    if not workspace.Boats:FindFirstChild("PirateBrigade") then
+                        -- Mua thuyền
+                        topos(CFrame.new(-16927.45, 9.08, 433.86))
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyBoat", "PirateBrigade")
+                    else
+                        local seat = workspace.Boats.PirateBrigade:FindFirstChild("VehicleSeat")
+                        if seat then
+                            if Plr.Character.Humanoid.Sit == false then
+                                topos(seat.CFrame * CFrame.new(0, 2, 0))
+                            else
+                                -- Lái thẳng ra vùng biển sâu nguy hiểm (Cấp độ 6)
+                                TP1(CFrame.new(-37813.69, -0.32, 6105.16))
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+BoatSection:CreateToggle("Tự động diệt Terror Shark", false, function(state)
+    _G.Autoterrorshark = state
+end)
+
+task.spawn(function()
+    while task.wait(0.3) do
+        if _G.Autoterrorshark and World3 then
+            pcall(function()
+                local shark = workspace.Enemies:FindFirstChild("Terrorshark")
+                if shark and shark:FindFirstChild("Humanoid") and shark.Humanoid.Health > 0 then
+                    Plr.Character.Humanoid.Sit = false
+                    repeat
+                        task.wait()
+                        AutoHaki()
+                        EquipWeapon(_G.SelectWeapon)
+                        shark.HumanoidRootPart.CanCollide = false
+                        shark.Humanoid.WalkSpeed = 0
+                        topos(shark.HumanoidRootPart.CFrame * CFrame.new(0, 45, 0))
+                    until not _G.Autoterrorshark or shark.Humanoid.Health <= 0 or not shark.Parent
+                end
+            end)
+        end
+    end
+end)
+
+
+-- ==========================================
+-- TAB 5: TRÁI ÁC QUỶ & RAIDS (AUTO RAIDS, NEXT ISLAND)
+-- ==========================================
+local FruitTab = Window:CreateTab("Raid / Trái", "cherry")
+local GachaSection = FruitTab:CreateSection("Mua / Trữ trái")
+
+GachaSection:CreateToggle("Tự động xoay Trái Ác Quỷ (Gacha)", false, function(state)
+    _G.RandomAuto = state
+end)
+task.spawn(function()
+    while task.wait(2) do
+        if _G.RandomAuto then
+            ReplicatedStorage.Remotes.CommF_:InvokeServer("Cousin", "Buy")
+        end
+    end
+end)
+
+GachaSection:CreateToggle("Tự động cất Trái vào kho", false, function(state)
+    _G.AutoStoreFruit = state
+end)
+task.spawn(function()
+    while task.wait(1) do
+        if _G.AutoStoreFruit then
+            pcall(function()
+                for _, tool in pairs(Plr.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") and string.find(tool.Name, "Fruit") then
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", tool:GetAttribute("OriginalName") or tool.Name, tool)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+local RaidSection = FruitTab:CreateSection("Hệ Thống Tự Đi Raid")
+
+RaidSection:CreateDropdown("Chọn loại Chip", {"Flame", "Ice", "Sand", "Dark", "Light", "Magma", "Quake", "Buddha", "Spider", "Phoenix", "Dough"}, "Flame", function(value)
+    _G.SelectChip = value
+end)
+
+RaidSection:CreateToggle("Tự động Mua Chip", false, function(state)
+    _G.AutoBuyChip = state
+end)
+task.spawn(function()
+    while task.wait(1.5) do
+        if _G.AutoBuyChip and _G.SelectChip then
+            pcall(function()
+                ReplicatedStorage.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+            end)
+        end
+    end
+end)
+
+RaidSection:CreateToggle("Tự động Bắt Đầu Raid", false, function(state)
+    _G.StartRaid = state
+end)
+task.spawn(function()
+    while task.wait(1) do
+        if _G.StartRaid then
+            pcall(function()
+                local hasChip = Plr.Backpack:FindFirstChild("Special Microchip") or Plr.Character:FindFirstChild("Special Microchip")
+                if hasChip then
+                    if World2 then
+                        topos(CFrame.new(-6438.73, 250.64, -4501.5))
+                        fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
+                    elseif World3 then
+                        ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5075.5, 314.51, -3150.02))
+                        topos(CFrame.new(-5017.4, 314.84, -2823.01))
+                        fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+RaidSection:CreateToggle("Tự động Farm Raid (Next Island)", false, function(state)
+    _G.Dungeon = state
+end)
+
+-- Thuật toán lấy Đảo hiện tại trong Raid
+local function GetRaidIsland(num)
+    local closest, dist = nil, math.huge
+    for _, island in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
+        if island.Name == "Island " .. num then
+            local mag = (island.Position - HRP().Position).Magnitude
+            if mag < dist then
+                dist = mag
+                closest = island
+            end
+        end
+    end
+    return closest
+end
+
+local function GetNextRaidIsland()
+    for _, num in ipairs({5, 4, 3, 2, 1}) do
+        local island = GetRaidIsland(num)
+        if island and (island.Position - HRP().Position).Magnitude <= 4000 then
+            return island
+        end
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.2) do
+        if _G.Dungeon then
+            pcall(function()
+                -- Diệt toàn bộ quái trong đảo hiện tại
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                        if (enemy.HumanoidRootPart.Position - HRP().Position).Magnitude <= 1200 then
+                            repeat
+                                task.wait()
+                                EquipWeapon(_G.SelectWeapon)
+                                topos(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+                            until enemy.Humanoid.Health <= 0 or not _G.Dungeon
+                        end
+                    end
+                end
+                -- Di chuyển sang đảo kế tiếp nếu hết quái
+                local nextIsland = GetNextRaidIsland()
+                if nextIsland then
+                    topos(nextIsland.CFrame * CFrame.new(0, 60, 0))
+                end
+            end)
+        end
+    end
+end)
+
+
+-- ==========================================
+-- TAB 6: CHỈ SỐ (STATS AUTO DISTRIBUTE)
+-- ==========================================
+local StatsTab = Window:CreateTab("Chỉ Số", "Signal")
+local PointSection = StatsTab:CreateSection("Phân bổ chỉ số tự động")
+
+local StatsSelect = {
+    Melee = false,
+    Defense = false,
+    Sword = false,
+    Gun = false,
+    BloxFruit = false,
+}
+local PointsPerTick = 1
+
+PointSection:CreateSlider("Số điểm cộng mỗi lần", 1, 100, 1, function(value)
+    PointsPerTick = value
+end)
+
+PointSection:CreateToggle("Tự động tăng điểm", false, function(state)
+    _G.AutoStats = state
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.AutoStats then
+            pcall(function()
+                local points = Plr.Data.Points.Value
+                if points > 0 then
+                    for statName, enabled in pairs(StatsSelect) do
+                        if enabled then
+                            local realStatName = statName
+                            if statName == "BloxFruit" then realStatName = "Blox Fruit" end
+                            ReplicatedStorage.Remotes.CommF_:InvokeServer("AddPoint", realStatName, math.min(points, PointsPerTick))
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+local StatOptions = StatsTab:CreateSection("Lựa chọn chỉ số")
+
+StatOptions:CreateToggle("Cận Chiến (Melee)", false, function(state) StatsSelect.Melee = state end)
+StatOptions:CreateToggle("Phòng Thủ (Defense)", false, function(state) StatsSelect.Defense = state end)
+StatOptions:CreateToggle("Kiếm (Sword)", false, function(state) StatsSelect.Sword = state end)
+StatOptions:CreateToggle("Súng (Gun)", false, function(state) StatsSelect.Gun = state end)
+StatOptions:CreateToggle("Trái Ác Quỷ (Blox Fruit)", false, function(state) StatsSelect.BloxFruit = state end)
+
+
+-- ==========================================
+-- TAB 7: DỊCH CHUYỂN (TELEPORT TO ISLANDS)
+-- ==========================================
+local TPTab = Window:CreateTab("Dịch Chuyển", "locate")
+local IslandSection = TPTab:CreateSection("Dịch chuyển đảo")
+
+TPTab:CreateDropdown("Chọn đảo muốn đến", v1117, v1117[1] or "", function(value)
+    _G.SelectIsland = value
+end)
+
+TPTab:CreateToggle("Bắt đầu dịch chuyển Đảo", false, function(state)
+    _G.TeleportIsland = state
+end)
+
+task.spawn(function()
+    while task.wait(0.5) do
+        if _G.TeleportIsland and _G.SelectIsland ~= "" then
+            pcall(function()
+                local cf = Islands[_G.SelectIsland]
+                if cf then
+                    topos(cf)
+                end
+            end)
+        end
+    end
+end)
+
+
+-- ==========================================
+-- TAB 8: HỖ TRỢ CHIẾN ĐẤU (ESP & AIMBOT)
+-- ==========================================
+local CombatTab = Window:CreateTab("Hỗ Trợ", "user")
+local ESPSection = CombatTab:CreateSection("Xuyên Tường (ESP / Chams)")
+
+local ESPPlayer = false
+local ESPConnections = {}
+
+-- Chức năng ESP người chơi cao cấp
+local function RemoveESP(player)
+    if player.Character then
+        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and hrp:FindFirstChild("PlayerESP") then
+            hrp.PlayerESP:Destroy()
+        end
+    end
+    if ESPConnections[player] then
+        ESPConnections[player]:Disconnect()
+        ESPConnections[player] = nil
+    end
+end
+
+local function CreateESP(player)
+    if player == Plr then return end
+    if not player.Character then return end
+
+    local char = player.Character
+    local hrp = char:WaitForChild("HumanoidRootPart", 3)
+    local hum = char:WaitForChild("Humanoid", 3)
+    if not hrp or not hum then return end
+
+    RemoveESP(player)
+
+    local gui = Instance.new("BillboardGui", hrp)
+    gui.Name = "PlayerESP"
+    gui.Size = UDim2.new(0, 200, 0, 50)
+    gui.StudsOffset = Vector3.new(0, 3, 0)
+    gui.AlwaysOnTop = true
+
+    local nameLabel = Instance.new("TextLabel", gui)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    nameLabel.TextSize = 14
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Font = Enum.Font.SourceSansBold
+
+    local hpLabel = Instance.new("TextLabel", gui)
+    hpLabel.BackgroundTransparency = 1
+    hpLabel.Size = UDim2.new(1, 0, 0.5, 0)
+    hpLabel.Position = UDim2.new(0, 0, 0.5, 0)
+    hpLabel.TextSize = 14
+    hpLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    hpLabel.TextStrokeTransparency = 0
+    hpLabel.Font = Enum.Font.SourceSansBold
+
+    ESPConnections[player] = RunService.RenderStepped:Connect(function()
+        if not ESPPlayer or not char or not hrp or hum.Health <= 0 then
+            RemoveESP(player)
+            return
+        end
+        local myHrp = HRP()
+        if myHrp then
+            local dist = math.floor((myHrp.Position - hrp.Position).Magnitude)
+            nameLabel.Text = player.Name .. " [" .. dist .. "m]"
+            hpLabel.Text = "[" .. math.floor(hum.Health) .. "/" .. math.floor(hum.MaxHealth) .. "]"
+        end
+    end)
+end
+
+ESPSection:CreateToggle("ESP Người chơi", false, function(state)
+    ESPPlayer = state
+    if state then
+        for _, p in pairs(Players:GetPlayers()) do
+            CreateESP(p)
+        end
+        Players.PlayerAdded:Connect(CreateESP)
+        Players.PlayerRemoving:Connect(RemoveESP)
+    else
+        for _, p in pairs(Players:GetPlayers()) do
+            RemoveESP(p)
+        end
+    end
+end)
+
+ESPSection:CreateToggle("ESP Rương Vàng", false, function(state)
+    _G.ChestESP = state
+    if not state then
+        for _, c in pairs(CollectionService:GetTagged("_ChestTagged")) do
+            if c:FindFirstChild("ChestEsp") then c.ChestEsp:Destroy() end
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(1) do
+        if _G.ChestESP then
+            pcall(function()
+                for _, chest in pairs(CollectionService:GetTagged("_ChestTagged")) do
+                    if not chest:GetAttribute("IsDisabled") and not chest:FindFirstChild("ChestEsp") then
+                        local bGui = Instance.new("BillboardGui", chest)
+                        bGui.Name = "ChestEsp"
+                        bGui.Size = UDim2.new(0, 100, 0, 30)
+                        bGui.AlwaysOnTop = true
+                        
+                        local lbl = Instance.new("TextLabel", bGui)
+                        lbl.Size = UDim2.new(1, 0, 1, 0)
+                        lbl.BackgroundTransparency = 1
+                        lbl.TextColor3 = Color3.fromRGB(255, 215, 0)
+                        lbl.TextSize = 12
+                        lbl.Text = "Rương"
+                        lbl.Font = Enum.Font.SourceSansBold
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+
+-- ==========================================
+-- TAB 9: CÀI ĐẶT & TIỆN ÍCH (SETTINGS / MISC)
+-- ==========================================
+local MiscTab = Window:CreateTab("Tiện Ích", "settings")
+local CharacterSection = MiscTab:CreateSection("Năng lực nhân vật")
+
+CharacterSection:CreateSlider("Tốc độ chạy (WalkSpeed)", 16, 250, 16, function(value)
+    _G.WalkSpeedValue = value
+    local hum = Plr.Character and Plr.Character:FindFirstChild("Humanoid")
+    if hum then hum.WalkSpeed = value end
+end)
+
+CharacterSection:CreateSlider("Sức nhảy (JumpPower)", 50, 400, 50, function(value)
+    _G.JumpValue = value
+    local hum = Plr.Character and Plr.Character:FindFirstChild("Humanoid")
+    if hum then hum.JumpPower = value end
+end)
+
+CharacterSection:CreateToggle("Đi trên nước", false, function(state)
+    _G.WalkOnWater = state
+end)
+
+task.spawn(function()
+    while task.wait(0.2) do
+        pcall(function()
+            if _G.WalkOnWater then
+                -- Đơn giản hóa cơ chế noclip trên nước
+                local platform = workspace:FindFirstChild("WaterPlatform")
+                if not platform then
+                    platform = Instance.new("Part", workspace)
+                    platform.Name = "WaterPlatform"
+                    platform.Size = Vector3.new(9999, 1, 9999)
+                    platform.Anchored = true
+                    platform.Transparency = 1
+                end
+                platform.CFrame = CFrame.new(HRP().Position.X, 0, HRP().Position.Z)
+            else
+                if workspace:FindFirstChild("WaterPlatform") then
+                    workspace.WaterPlatform:Destroy()
+                end
+            end
+        end)
+    end
+end)
+
+local RenderSection = MiscTab:CreateSection("Đồ họa & Hiệu năng")
+
+RenderSection:CreateButton("Tối ưu hóa FPS (Giảm Lag)", function()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and not v:IsDescendantOf(Plr.Character) then
+            v.Material = Enum.Material.SmoothPlastic
+        end
+    end
+    game.Lighting.GlobalShadows = false
+    game.Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+    AppleCatLibrary:Notify({Title = "Thành Công", Content = "Đã tối ưu hóa đồ họa thành công!", Duration = 3})
+end)
+
+RenderSection:CreateToggle("Bật màn hình trắng (Treo máy)", false, function(state)
+    RunService:Set3dRenderingEnabled(not state)
+end)
+
+-- Kết thúc File Block
+return AppleCatLibrary
