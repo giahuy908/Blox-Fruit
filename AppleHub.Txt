@@ -1,4 +1,3 @@
-```lua
 --[[
     ========================================================================
     🍎 SCRIPT BLOX FRUITS PREMIUM - PHIÊN BẢN KHỔNG LỒ (FULL CHỨC NĂNG) 🍎
